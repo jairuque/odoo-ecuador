@@ -1,12 +1,7 @@
 # -*- coding: utf-8 -*-
 
-__author__ = 'Cristian Salamea (cristian.salamea@gmail.com)'
-
-import time
-from datetime import datetime
-
-from openerp import models, fields, api, _
-from openerp.exceptions import except_orm, Warning, RedirectWarning
+from openerp import models, fields
+from openerp.exceptions import Warning as UserError
 
 
 class ResPartner(models.Model):
@@ -14,15 +9,15 @@ class ResPartner(models.Model):
     _name = 'res.partner'
     _inherit = 'res.partner'
 
-    def name_search(self, cr, uid, name, args=None, operator='ilike', context=None, limit=100):
+    def name_search(self, cr, uid, name, args=None, operator='ilike', context=None, limit=100):  # noqa
         if not args:
-            args=[]
+            args = []
         if not context:
-            context={}
+            context = {}
         if name:
-            ids = self.search(cr, uid, [('ced_ruc', '=', name)] + args, limit=limit, context=context)
+            ids = self.search(cr, uid, [('ced_ruc', operator, name)] + args, limit=limit, context=context)  # noqa
             if not ids:
-                ids = self.search(cr, uid, [('name', operator, name)] + args, limit=limit, context=context)
+                ids = self.search(cr, uid, [('name', operator, name)] + args, limit=limit, context=context)  # noqa
         else:
             ids = self.search(cr, uid, args, limit=limit, context=context)
         return self.name_get(cr, uid, ids, context)
@@ -33,13 +28,13 @@ class ResPartner(models.Model):
         else:
             if len(identificador) < 10:
                 return False
-        coef = [2,1,2,1,2,1,2,1,2]
+        coef = [2, 1, 2, 1, 2, 1, 2, 1, 2]
         cedula = identificador[:9]
         suma = 0
         for c in cedula:
             val = int(c) * coef.pop()
             suma += val > 9 and val-9 or val
-        result = 10 - ((suma % 10)!=0 and suma%10 or 10)
+        result = 10 - ((suma % 10) != 0 and suma % 10 or 10)
         if result == int(identificador[9:10]):
             return True
         else:
@@ -50,19 +45,19 @@ class ResPartner(models.Model):
         if not len(ruc) == 13:
             return False
         if ruc[2:3] == '9':
-            coef = [4,3,2,7,6,5,4,3,2,0]
+            coef = [4, 3, 2, 7, 6, 5, 4, 3, 2, 0]
             coef.reverse()
             verificador = int(ruc[9:10])
         elif ruc[2:3] == '6':
-            coef = [3,2,7,6,5,4,3,2,0,0]
+            coef = [3, 2, 7, 6, 5, 4, 3, 2, 0, 0]
             coef.reverse()
             verificador = int(ruc[8:9])
         else:
-            raise osv.except_osv('Error', 'Cambie el tipo de persona')
+            raise UserError('Error', 'Cambie el tipo de persona')
         suma = 0
         for c in ruc[:10]:
             suma += int(c) * coef.pop()
-        result = 11 - (suma>0 and suma % 11 or 11)
+        result = 11 - (suma > 0 and suma % 11 or 11)
         if result == verificador:
             return True
         else:
@@ -93,17 +88,20 @@ class ResPartner(models.Model):
         size=13,
         required=True,
         help='Identificación o Registro Unico de Contribuyentes')
-    type_ced_ruc = fields.Selection([
-            ('cedula','CEDULA'),
-            ('ruc','RUC'),
-            ('pasaporte','PASAPORTE')
+    type_ced_ruc = fields.Selection(
+        [
+            ('cedula', 'CEDULA'),
+            ('ruc', 'RUC'),
+            ('pasaporte', 'PASAPORTE')
             ],
-            'Tipo ID',
-            required=True
+        'Tipo ID',
+        required=True
     )
     tipo_persona = fields.Selection(
-        [('6','Persona Natural'),
-         ('9','Persona Juridica')],
+        [
+            ('6', 'Persona Natural'),
+            ('9', 'Persona Juridica')
+        ],
         string='Persona',
         required=True,
         default='9'
@@ -119,6 +117,13 @@ class ResPartner(models.Model):
          'unique(ced_ruc,type_ced_ruc,tipo_persona,company_id)',
          u'El identificador es único.'),
         ]
+
+    def validate_from_sri(self):
+        """
+        TODO
+        """
+        SRI_LINK = "https://declaraciones.sri.gob.ec/facturacion-internet/consultas/publico/ruc-datos1.jspa"  # noqa
+        texto = '0103893954'  # noqa
 
 
 class ResCompany(models.Model):

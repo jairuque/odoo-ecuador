@@ -28,10 +28,7 @@
     'author': 'OpenERP SA',
     'depends': [
                 'account',
-                'base_vat',
-                'base_iban',
                 'account_chart',
-                'account_coda',
                 ],
     'init_xml': [],
     'update_xml': [

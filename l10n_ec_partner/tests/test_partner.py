@@ -16,8 +16,7 @@ class PartnerTest(TransactionCase):
                 'ced_ruc': '0103893962',
                 'name': 'CRISTIAN GONZALO SALAMEA MALDONADO',
                 'type_ced_ruc': 'cedula',
-                'tipo_persona': '6'                
+                'tipo_persona': '6'
             }
         )
         self.assertNotEquals(partner_id, 0)
-
